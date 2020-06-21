@@ -1,0 +1,256 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using MarsDeviceManager;
+using SensorStandard;
+using SensorStandard.MrsTypes;
+using Vlc.DotNet.Core;
+using Vlc.DotNet.Core.Interops;
+using Vlc.DotNet.Wpf;
+using File = SensorStandard.MrsTypes.File;
+
+namespace SensorStandardImage
+{
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        private Device _device;
+        private bool _showKeepAlive;
+
+        public string IP
+        {
+            get { return (string)GetValue(IPProperty); }
+            set { SetValue(IPProperty, value); }
+        }
+
+        public static readonly DependencyProperty IPProperty =
+            DependencyProperty.Register(nameof(IP), typeof(string), typeof(MainWindow), new PropertyMetadata(null));
+
+        public int Port
+        {
+            get { return (int)GetValue(PortProperty); }
+            set { SetValue(PortProperty, value); }
+        }
+
+        public static readonly DependencyProperty PortProperty =
+            DependencyProperty.Register(nameof(Port), typeof(int), typeof(MainWindow), new PropertyMetadata(0));
+
+        public int NotificationPort
+        {
+            get { return (int)GetValue(NotificationPortProperty); }
+            set { SetValue(NotificationPortProperty, value); }
+        }
+
+        public static readonly DependencyProperty NotificationPortProperty =
+            DependencyProperty.Register("NotificationPort", typeof(int), typeof(MainWindow), new PropertyMetadata(0));
+
+        public MainWindow()
+        {
+            InitializeComponent();
+            IP = GetLocalIPAddress();
+            Port = 13001;
+            NotificationPort = 20000;
+        }
+
+        private void StartButton_Click(object sender, RoutedEventArgs e)
+        {
+            _device?.Disconnect();
+            _device = new Device(IP, Port, 
+                GetLocalIPAddress(), NotificationPort, "MarsLab");
+
+            Globals.ValidateMessages = true;
+            _device.CommandMessageSent += Device_CommandMessageSent;
+            _device.ConfigurationReceived += Device_ConfigurationReceived;
+            _device.ConfigurationRequestSent += Device_ConfigurationRequestSent;
+            _device.Disconnected += Device_Disconnected;
+            _device.IndicationReportReceived += Device_IndicationReportReceived;
+            _device.StatusReportReceived += Device_StatusReportReceived;
+            _device.SubscriptionRequestSent += Device_SubscriptionRequestSent;
+
+            _device.Connect();
+        }
+
+        private void Device_SubscriptionRequestSent(object sender, DeviceSubscriptionConfiguration e)
+        {
+            AddLogItem("Subscription Request Sent", e.ToXml());
+        }
+
+        private void Device_StatusReportReceived(object sender, DeviceStatusReport e)
+        {
+            if (e.IsValid(out var exception) == false)
+            {
+                MessageBox.Show("Invalid message!\n\n" + exception.Message);
+            }
+            if (_showKeepAlive || e.Items != null && e.Items.OfType<SensorStatusReport>().Any(x=>x.Item != null))
+            {
+                AddLogItem("Status Report Received", e.ToXml());
+            }
+
+            var picture = e.Items?.OfType<SensorStatusReport>().FirstOrDefault(x => x.PictureStatus != null)?.PictureStatus;
+            if (picture?.MediaFile != null && picture.MediaFile.Length > 0)
+            {
+                File file = picture.MediaFile[0];
+                var stream = new MemoryStream(file.File1);
+
+                var dir = new DirectoryInfo(@"C:\Program Files (x86)\VideoLAN\VLC");
+                VlcControl.SourceProvider.CreatePlayer(dir);
+                VlcControl.SourceProvider.MediaPlayer.Play(stream);
+                //if (file.ItemElementName == ItemChoiceType3.NameJPEG)
+                //{
+                //    JoinUiThread(() => { VlcControl.SourceProvider.VideoSource = LoadImage(file.File1); });
+                //}
+                //else if (file.ItemElementName == ItemChoiceType3.NameMP4)
+                //{
+                //    var stream = new MemoryStream(file.File1);
+
+                //    var dir = new DirectoryInfo(@"C:\Program Files (x86)\VideoLAN\VLC");
+                //    VlcControl.SourceProvider.CreatePlayer(dir);
+                //    VlcControl.SourceProvider.MediaPlayer.Play(stream); 
+                //}
+            }
+        }
+
+        private void Device_IndicationReportReceived(object sender, DeviceIndicationReport e)
+        {
+            if (e.IsValid(out var exception) == false)
+            {
+                MessageBox.Show("Invalid message!\n\n" + exception.Message);
+            }
+            AddLogItem("Indication Report Received", e.ToXml());
+        }
+
+        private void Device_Disconnected(object sender, EventArgs e)
+        {
+            AddLogItem("Disconnected");
+        }
+
+        private void Device_ConfigurationRequestSent(object sender, DeviceConfiguration e)
+        {
+            AddLogItem("Configuration Request Sent", e.ToXml());
+        }
+
+        private void Device_ConfigurationReceived(object sender, DeviceConfiguration e)
+        {
+            if (e.IsValid(out var exception) == false)
+            {
+                MessageBox.Show("Invalid message!\n\n" + exception.Message);
+            }
+            AddLogItem("Configuration Request Received", e.ToXml());
+        }
+
+        private void Device_CommandMessageSent(object sender, CommandMessage e)
+        {
+            if (e.Command.Item is SimpleCommandType simple && simple == SimpleCommandType.KeepAlive)
+            {
+                if (_showKeepAlive == false)
+                {
+                    return;
+                }
+            }
+            AddLogItem("Command Message Sent", e.ToXml());
+        }
+
+        private void StopButton_Click(object sender, RoutedEventArgs e)
+        {
+            _device?.Disconnect();
+        }
+
+        private static string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+
+            return string.Empty;
+        }
+
+        private void AddLogItem(string message, object content = null)
+        {
+            JoinUiThread(() =>
+            {
+                var item = new ListViewItem { Content = $"{DateTime.Now.ToLongTimeString()} - {message}" };
+                if (content != null)
+                {
+                    item.MouseDoubleClick += (sender, args) =>
+                    {
+                        var logItemWindow = new LogItemWindow(content);
+                        logItemWindow.Show();
+                    };
+                }
+                LogList.Items.Add(item);
+            });
+        }
+
+        private static BitmapImage LoadImage(byte[] imageData)
+        {
+            if (imageData == null || imageData.Length == 0) return null;
+            var image = new BitmapImage();
+            using (var mem = new MemoryStream(imageData))
+            {
+                mem.Position = 0;
+                image.BeginInit();
+                image.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.UriSource = null;
+                image.StreamSource = mem;
+                image.EndInit();
+            }
+            image.Freeze();
+            return image;
+        }
+
+        public static ImageSource ByteToImage(byte[] imageData)
+        {
+            BitmapImage biImg = new BitmapImage();
+            MemoryStream ms = new MemoryStream(imageData);
+            biImg.BeginInit();
+            biImg.StreamSource = ms;
+            biImg.EndInit();
+
+            ImageSource imgSrc = biImg as ImageSource;
+
+            return imgSrc;
+        }
+
+        private void KeepAliveCheckBox_OnChecked(object sender, RoutedEventArgs e)
+        {
+            _showKeepAlive = true;
+        }
+
+        private void KeepAliveCheckBox_OnUnchecked(object sender, RoutedEventArgs e)
+        {
+            _showKeepAlive = false;
+        }
+
+        private async void JoinUiThread(Action action)
+        {
+            await Dispatcher.InvokeAsync(action);
+        }
+
+        private void MainWindow_OnClosed(object sender, EventArgs e)
+        {
+            _device?.Disconnect();
+            Environment.Exit(0);
+        }
+    }
+}

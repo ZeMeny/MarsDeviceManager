@@ -1,0 +1,311 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DeviceConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ProtocolVersion="Undefined">
+  <DeviceIdentification xmlns="urn:SNSR_STD">
+    <DeviceName>CNTKRNZ150202</DeviceName>
+    <DeviceType>EO Device</DeviceType>
+    <DeviceCategory>Undefined</DeviceCategory>
+  </DeviceIdentification>
+  <NotificationServiceIPAddress xmlns="urn:SNSR_STD">127.0.0.1</NotificationServiceIPAddress>
+  <NotificationServicePort xmlns="urn:SNSR_STD">13001</NotificationServicePort>
+  <LocationType xmlns="urn:SNSR_STD">
+    <GeodeticLocation Datum="WGS84">
+      <Latitude Units="Decimal Degrees">33.0607299992629</Latitude>
+      <Longitude Units="Decimal Degrees">35.402570001846712</Longitude>
+      <Altitude Units="Meters" Reference="MSL">821</Altitude>
+    </GeodeticLocation>
+  </LocationType>
+  <SensorConfiguration xmlns="urn:SNSR_STD">
+    <SensorIdentification>
+      <SensorName>pedestal</SensorName>
+      <SensorType>Pedestal</SensorType>
+    </SensorIdentification>
+    <PedestalConfiguration>
+      <LocationPrecision Units="Undefined">0</LocationPrecision>
+      <HorizontalVelocityRange>
+        <Min Units="MilsPerSecond">0</Min>
+        <Max Units="MilsPerSecond">1018.59</Max>
+      </HorizontalVelocityRange>
+      <VerticalVelocityRange>
+        <Min Units="MilsPerSecond">0</Min>
+        <Max Units="MilsPerSecond">1018.59</Max>
+      </VerticalVelocityRange>
+      <AzimuthRange>
+        <Min Units="Mils">0</Min>
+        <Max Units="Mils">6400</Max>
+      </AzimuthRange>
+      <ElevationAngleRange>
+        <Min Units="Mils">-711.1099484288693</Min>
+        <Max Units="Mils">444.4437329462171</Max>
+      </ElevationAngleRange>
+      <PedestalMovementTypeCapabilities>Simultaneous Horizontal Vertical</PedestalMovementTypeCapabilities>
+      <PedestalVelocityControl>Manual</PedestalVelocityControl>
+    </PedestalConfiguration>
+    <SimpleCommandConfiguration>Calibrate</SimpleCommandConfiguration>
+    <SimpleCommandConfiguration>SetNorth</SimpleCommandConfiguration>
+    <SimpleCommandConfiguration>GoTo</SimpleCommandConfiguration>
+    <SimpleCommandConfiguration>Move</SimpleCommandConfiguration>
+    <SimpleCommandConfiguration>Stop</SimpleCommandConfiguration>
+    <SimpleCommandConfiguration>SelfTest</SimpleCommandConfiguration>
+  </SensorConfiguration>
+  <SensorConfiguration xmlns="urn:SNSR_STD">
+    <SensorIdentification>
+      <SensorName>LRF</SensorName>
+      <SensorType>LRF</SensorType>
+    </SensorIdentification>
+    <SimpleCommandConfiguration>On</SimpleCommandConfiguration>
+    <SimpleCommandConfiguration>Off</SimpleCommandConfiguration>
+    <SimpleCommandConfiguration>Lase</SimpleCommandConfiguration>
+  </SensorConfiguration>
+  <SensorConfiguration xmlns="urn:SNSR_STD">
+    <SensorIdentification>
+      <SensorName>Pointer</SensorName>
+      <SensorType>Pointer</SensorType>
+    </SensorIdentification>
+    <PointerConfiguration>
+      <PointerCommandConfiguration>
+        <SimpleCommand>Mode</SimpleCommand>
+        <LasingMode>Continuous</LasingMode>
+      </PointerCommandConfiguration>
+    </PointerConfiguration>
+    <SimpleCommandConfiguration>On</SimpleCommandConfiguration>
+    <SimpleCommandConfiguration>Off</SimpleCommandConfiguration>
+    <SimpleCommandConfiguration>Lase</SimpleCommandConfiguration>
+  </SensorConfiguration>
+  <SensorConfiguration xmlns="urn:SNSR_STD">
+    <SensorIdentification>
+      <SensorName>VideoSwitch</SensorName>
+      <SensorType>Video Switch</SensorType>
+    </SensorIdentification>
+    <VideoSwitchConfiguration>
+      <PrimaryVideoChannelID>1</PrimaryVideoChannelID>
+      <VideoSwitchCommandConfiguration>
+        <SimpleCommand>Set</SimpleCommand>
+        <VideoChannelConfiguration>
+          <VideoChannelID>1</VideoChannelID>
+          <SensorIdentification>
+            <SensorName>FLIR</SensorName>
+            <SensorType>FLIR</SensorType>
+          </SensorIdentification>
+          <SensorIdentification>
+            <SensorName>DayCameraColor</SensorName>
+            <SensorType>Day Camera Color</SensorType>
+          </SensorIdentification>
+          <SensorIdentification>
+            <SensorName>DayCameraBW</SensorName>
+            <SensorType>Day Camera BW</SensorType>
+          </SensorIdentification>
+        </VideoChannelConfiguration>
+        <VideoChannelConfiguration>
+          <VideoChannelID>2</VideoChannelID>
+          <SensorIdentification>
+            <SensorName>FLIR</SensorName>
+            <SensorType>FLIR</SensorType>
+          </SensorIdentification>
+          <SensorIdentification>
+            <SensorName>DayCameraColor</SensorName>
+            <SensorType>Day Camera Color</SensorType>
+          </SensorIdentification>
+          <SensorIdentification>
+            <SensorName>DayCameraBW</SensorName>
+            <SensorType>Day Camera BW</SensorType>
+          </SensorIdentification>
+        </VideoChannelConfiguration>
+      </VideoSwitchCommandConfiguration>
+    </VideoSwitchConfiguration>
+  </SensorConfiguration>
+  <SensorConfiguration xmlns="urn:SNSR_STD">
+    <SensorIdentification>
+      <SensorName>FLIR</SensorName>
+      <SensorType>FLIR</SensorType>
+    </SensorIdentification>
+    <OpticalConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>Zoom</SimpleCommand>
+        <Operation>Set</Operation>
+        <Operation>Plus</Operation>
+        <Operation>Minus</Operation>
+        <Operation>Stop</Operation>
+        <Control>Manual</Control>
+        <FieldOfViewConfigurationType>
+          <ValueRange>
+            <Min Units="Mils">0.88888746139445207</Min>
+            <Max Units="Mils">222.22186534861302</Max>
+          </ValueRange>
+        </FieldOfViewConfigurationType>
+      </OpticalCommandConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>Focus</SimpleCommand>
+        <Operation>Plus</Operation>
+        <Operation>Minus</Operation>
+        <Operation>Stop</Operation>
+        <Operation>Far Limit</Operation>
+        <Control>Manual</Control>
+      </OpticalCommandConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>Gain</SimpleCommand>
+        <Operation>Set</Operation>
+        <Operation>Plus</Operation>
+        <Operation>Minus</Operation>
+        <Control>Manual</Control>
+        <Control>Continuous Auto</Control>
+      </OpticalCommandConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>Level</SimpleCommand>
+        <Operation>Set</Operation>
+        <Operation>Plus</Operation>
+        <Operation>Minus</Operation>
+        <Control>Manual</Control>
+        <Control>Continuous Auto</Control>
+      </OpticalCommandConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>Polarity</SimpleCommand>
+        <Operation>Set</Operation>
+        <Operation>Get</Operation>
+        <PolarityHotColorDescription>Black</PolarityHotColorDescription>
+        <PolarityHotColorDescription>White</PolarityHotColorDescription>
+      </OpticalCommandConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>LocalGain</SimpleCommand>
+        <Operation>Set</Operation>
+        <Operation>Get</Operation>
+      </OpticalCommandConfiguration>
+    </OpticalConfiguration>
+  </SensorConfiguration>
+  <SensorConfiguration xmlns="urn:SNSR_STD">
+    <SensorIdentification>
+      <SensorName>DayCameraColor</SensorName>
+      <SensorType>Day Camera Color</SensorType>
+    </SensorIdentification>
+    <OpticalConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>Zoom</SimpleCommand>
+        <Operation>Set</Operation>
+        <Operation>Plus</Operation>
+        <Operation>Minus</Operation>
+        <Operation>Stop</Operation>
+        <Control>Manual</Control>
+        <FieldOfViewConfigurationType>
+          <ValueRange>
+            <Min Units="Mils">0.88888746139445207</Min>
+            <Max Units="Mils">1155.5536998127877</Max>
+          </ValueRange>
+        </FieldOfViewConfigurationType>
+      </OpticalCommandConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>Focus</SimpleCommand>
+        <Operation>Plus</Operation>
+        <Operation>Minus</Operation>
+        <Operation>Stop</Operation>
+        <Operation>Far Limit</Operation>
+        <Control>Manual</Control>
+      </OpticalCommandConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>Filter</SimpleCommand>
+        <Operation>Set</Operation>
+        <FilterDescriptionType>
+          <FilterDescription>0</FilterDescription>
+          <FilterNumber>0</FilterNumber>
+        </FilterDescriptionType>
+        <FilterDescriptionType>
+          <FilterDescription>1</FilterDescription>
+          <FilterNumber>1</FilterNumber>
+        </FilterDescriptionType>
+        <FilterDescriptionType>
+          <FilterDescription>2</FilterDescription>
+          <FilterNumber>2</FilterNumber>
+        </FilterDescriptionType>
+      </OpticalCommandConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>LocalGain</SimpleCommand>
+        <Operation>Set</Operation>
+        <Operation>Get</Operation>
+      </OpticalCommandConfiguration>
+    </OpticalConfiguration>
+  </SensorConfiguration>
+  <SensorConfiguration xmlns="urn:SNSR_STD">
+    <SensorIdentification>
+      <SensorName>DayCameraBW</SensorName>
+      <SensorType>Day Camera BW</SensorType>
+    </SensorIdentification>
+    <OpticalConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>Zoom</SimpleCommand>
+        <Operation>Set</Operation>
+        <Operation>Plus</Operation>
+        <Operation>Minus</Operation>
+        <Operation>Stop</Operation>
+        <Control>Manual</Control>
+        <FieldOfViewConfigurationType>
+          <ValueRange>
+            <Min Units="Mils">0.88888746139445207</Min>
+            <Max Units="Mils">21.333299073466847</Max>
+          </ValueRange>
+        </FieldOfViewConfigurationType>
+      </OpticalCommandConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>Focus</SimpleCommand>
+        <Operation>Plus</Operation>
+        <Operation>Minus</Operation>
+        <Operation>Stop</Operation>
+        <Operation>Far Limit</Operation>
+        <Control>Manual</Control>
+      </OpticalCommandConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>Gain</SimpleCommand>
+        <Operation>Set</Operation>
+        <Operation>Plus</Operation>
+        <Operation>Minus</Operation>
+        <Control>Manual</Control>
+        <Control>Continuous Auto</Control>
+      </OpticalCommandConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>Level</SimpleCommand>
+        <Operation>Set</Operation>
+        <Operation>Plus</Operation>
+        <Operation>Minus</Operation>
+        <Control>Manual</Control>
+        <Control>Continuous Auto</Control>
+      </OpticalCommandConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>Polarity</SimpleCommand>
+        <Operation>Set</Operation>
+        <Operation>Get</Operation>
+        <PolarityHotColorDescription>Black</PolarityHotColorDescription>
+        <PolarityHotColorDescription>White</PolarityHotColorDescription>
+      </OpticalCommandConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>Filter</SimpleCommand>
+        <Operation>Set</Operation>
+        <FilterDescriptionType>
+          <FilterDescription>0</FilterDescription>
+          <FilterNumber>0</FilterNumber>
+        </FilterDescriptionType>
+        <FilterDescriptionType>
+          <FilterDescription>1</FilterDescription>
+          <FilterNumber>1</FilterNumber>
+        </FilterDescriptionType>
+        <FilterDescriptionType>
+          <FilterDescription>2</FilterDescription>
+          <FilterNumber>2</FilterNumber>
+        </FilterDescriptionType>
+        <FilterDescriptionType>
+          <FilterDescription>3</FilterDescription>
+          <FilterNumber>3</FilterNumber>
+        </FilterDescriptionType>
+        <FilterDescriptionType>
+          <FilterDescription>4</FilterDescription>
+          <FilterNumber>4</FilterNumber>
+        </FilterDescriptionType>
+        <FilterDescriptionType>
+          <FilterDescription>5</FilterDescription>
+          <FilterNumber>5</FilterNumber>
+        </FilterDescriptionType>
+      </OpticalCommandConfiguration>
+      <OpticalCommandConfiguration>
+        <SimpleCommand>LocalGain</SimpleCommand>
+        <Operation>Set</Operation>
+        <Operation>Get</Operation>
+      </OpticalCommandConfiguration>
+    </OpticalConfiguration>
+  </SensorConfiguration>
+</DeviceConfiguration>

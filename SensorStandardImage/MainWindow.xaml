@@ -1,0 +1,45 @@
+﻿<Window x:Class="SensorStandardImage.MainWindow"
+		Name="This"
+		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:local="clr-namespace:SensorStandardImage"
+		xmlns:vlc="clr-namespace:Vlc.DotNet.Wpf;assembly=Vlc.DotNet.Wpf"
+		mc:Ignorable="d"
+		Title="MainWindow" Height="600" Width="1000" 
+		MinHeight="600" MinWidth="800"
+		Closed="MainWindow_OnClosed"
+		DataContext="{Binding ElementName=This}">
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="54*"/>
+			<ColumnDefinition Width="17*"/>
+		</Grid.ColumnDefinitions>
+		<Border Name="MediaHost" BorderBrush="Black" BorderThickness="0.5">
+			<vlc:VlcControl Name="VlcControl"/>
+		</Border>
+		<Button Name="StartButton" Content="Start" Grid.Column="1" HorizontalAlignment="Left" Margin="5,164,0,0" VerticalAlignment="Top" Width="75" Click="StartButton_Click" Height="19"/>
+		<Button Name="StopButton" Content="Stop" Grid.Column="1" HorizontalAlignment="Right" Margin="0,164,9.6,0" VerticalAlignment="Top" Width="75" Click="StopButton_Click" Height="19"/>
+		<TextBox Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="6,26,0,0" TextWrapping="Wrap" 
+				 Text="{Binding IP, Mode=TwoWay}"
+				 VerticalAlignment="Top" Width="222"/>
+		<TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="6,10,0,0" TextWrapping="Wrap" Text="IP" VerticalAlignment="Top" Height="16" Width="32"/>
+		<TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="5,54,0,0" TextWrapping="Wrap" Text="Port" VerticalAlignment="Top" Height="16" Width="32"/>
+		<TextBox Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="5,75,0,0" 
+				 TextWrapping="Wrap" 
+				 Text="{Binding Port, Mode=TwoWay}" 
+				 VerticalAlignment="Top" Width="222"/>
+		<TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="6,103,0,0" TextWrapping="Wrap" Text="Notification Port" VerticalAlignment="Top" Height="16" />
+		<TextBox Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="5,124,0,0" 
+		         TextWrapping="Wrap" 
+		         Text="{Binding NotificationPort, Mode=TwoWay}" 
+		         VerticalAlignment="Top" Width="222"/>
+		<ScrollViewer Grid.Column="1" Margin="6,188,9.6,28.4">
+			<ListView Name="LogList"></ListView>
+		</ScrollViewer>
+		<CheckBox Name="KeepAliveCheckBox" Content="Show Keep Alive" Grid.Column="1" HorizontalAlignment="Left" Margin="6,0,0,8.4" Height="15" VerticalAlignment="Bottom" Width="105"
+				  Checked="KeepAliveCheckBox_OnChecked" Unchecked="KeepAliveCheckBox_OnUnchecked"/>
+
+	</Grid>
+</Window>
