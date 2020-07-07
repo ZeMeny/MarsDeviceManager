@@ -77,9 +77,10 @@ namespace MarsDeviceManager
 						device.RaiseDisconnected();
 						device.SendConfigRequest();
 					}
-					catch
+					catch (Exception ex)
 					{
 						// ignore
+						Console.WriteLine(ex);
 					}
 				}
 				// if already reconnecting and time (by seconds) to send cfg 
@@ -90,9 +91,10 @@ namespace MarsDeviceManager
 						deviceCfgTime[device] = DateTime.Now;
 						device.SendConfigRequest();
 					}
-					catch
+					catch (Exception ex)
 					{
 						// ignore
+						Console.WriteLine(ex);
 					}
 				}
 			}
@@ -103,9 +105,10 @@ namespace MarsDeviceManager
 				{
 					device.KeepAlive();
 				}
-				catch
+				catch (Exception ex)
 				{
 					// ignore
+					Console.WriteLine(ex);
 				}
 				if (deviceCfgTime.ContainsKey(device))
 				{

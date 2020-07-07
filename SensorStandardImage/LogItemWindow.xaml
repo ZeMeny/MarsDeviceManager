@@ -6,8 +6,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SensorStandardImage"
         mc:Ignorable="d"
+        Background="{StaticResource MaterialDesignPaper}"
+        TextElement.Foreground="{StaticResource MaterialDesignBody}"
         DataContext="{Binding ElementName=This}"
-        Title="LogItemWindow" Height="450" Width="400">
+        Title="Log Item Window" Height="450" Width="400"
+        MinHeight="450" MinWidth="400">
     <ScrollViewer HorizontalScrollBarVisibility="Auto">
         <TextBox IsReadOnly="True" Text="{Binding Item}"/>
     </ScrollViewer>

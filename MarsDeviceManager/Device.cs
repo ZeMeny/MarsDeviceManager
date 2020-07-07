@@ -22,6 +22,7 @@ namespace MarsDeviceManager
 		private MarsService _service;
 		private readonly ConnectionManager _connectionManager = ConnectionManager.Instance;
 		private ServiceHost _host;
+		private SubscriptionTypeType[] _subscriptions;
 
 		#endregion
 
@@ -135,7 +136,8 @@ namespace MarsDeviceManager
 		{
 			if (configurations == null)
 			{
-				throw new ArgumentNullException(nameof(configurations), "SensorConfiguration cannot be null");
+				//throw new ArgumentNullException(nameof(configurations), "SensorConfiguration cannot be null");
+				return new Sensor[0];
 			}
 			List<Sensor> sensors = new List<Sensor>();
 			foreach (SensorConfiguration config in configurations)
@@ -261,7 +263,7 @@ namespace MarsDeviceManager
 			Configuration = e;
 			Sensors = InitSensors(e?.SensorConfiguration);
 
-			SubscriptionTypeType[] subscriptionTypes = new SubscriptionTypeType[]
+			SubscriptionTypeType[] subscriptionTypes = _subscriptions ?? new []
 			{
 				SubscriptionTypeType.Configuration,
 				SubscriptionTypeType.OperationalIndication,
@@ -341,10 +343,12 @@ namespace MarsDeviceManager
 		/// <summary>
 		/// Start connection (Configuration and KeepAlive)
 		/// </summary>
-		public void Connect()
+		public void Connect(SubscriptionTypeType[] subscriptions = null)
 		{
 			InitClient();
 			InitHost();
+
+			_subscriptions = subscriptions;
 
 			_connectionManager.AddDevice(this);
 		}

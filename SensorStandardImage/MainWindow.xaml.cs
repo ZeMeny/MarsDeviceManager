@@ -30,6 +30,7 @@ namespace SensorStandardImage
     public partial class MainWindow : Window
     {
         private Device _device;
+        private bool _validate;
         private bool _showKeepAlive;
 
         public string IP
@@ -57,7 +58,7 @@ namespace SensorStandardImage
         }
 
         public static readonly DependencyProperty NotificationPortProperty =
-            DependencyProperty.Register("NotificationPort", typeof(int), typeof(MainWindow), new PropertyMetadata(0));
+            DependencyProperty.Register(nameof(NotificationPort), typeof(int), typeof(MainWindow), new PropertyMetadata(0));
 
         public MainWindow()
         {
@@ -73,7 +74,7 @@ namespace SensorStandardImage
             _device = new Device(IP, Port, 
                 GetLocalIPAddress(), NotificationPort, "MarsLab");
 
-            Globals.ValidateMessages = true;
+            Globals.ValidateMessages = false;
             _device.CommandMessageSent += Device_CommandMessageSent;
             _device.ConfigurationReceived += Device_ConfigurationReceived;
             _device.ConfigurationRequestSent += Device_ConfigurationRequestSent;
@@ -92,7 +93,7 @@ namespace SensorStandardImage
 
         private void Device_StatusReportReceived(object sender, DeviceStatusReport e)
         {
-            if (e.IsValid(out var exception) == false)
+            if (_validate && e.IsValid(out var exception) == false)
             {
                 MessageBox.Show("Invalid message!\n\n" + exception.Message);
             }
@@ -127,11 +128,34 @@ namespace SensorStandardImage
 
         private void Device_IndicationReportReceived(object sender, DeviceIndicationReport e)
         {
-            if (e.IsValid(out var exception) == false)
+            if (_validate && e.IsValid(out var exception) == false)
             {
                 MessageBox.Show("Invalid message!\n\n" + exception.Message);
             }
             AddLogItem("Indication Report Received", e.ToXml());
+
+            if (e.Items.OfType<SensorIndicationReport>().ElementAt(0).IndicationType[0].Item is VideoAnalyticDetectionType detectionType)
+            {
+                var imageData = detectionType.Picture?.ElementAt(0).File1;
+                if (imageData != null)
+                {
+                    try
+                    {
+                        if (VlcControl.SourceProvider.MediaPlayer == null)
+                        {
+                            var dir = new DirectoryInfo(@"C:\Program Files (x86)\VideoLAN\VLC");
+                            VlcControl.SourceProvider.CreatePlayer(dir);
+                        }
+
+                        var stream = new MemoryStream(imageData);
+                        VlcControl.SourceProvider.MediaPlayer.Play(stream);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Error Displaying Media\n\n" + ex);
+                    }
+                }
+            }
         }
 
         private void Device_Disconnected(object sender, EventArgs e)
@@ -146,7 +170,7 @@ namespace SensorStandardImage
 
         private void Device_ConfigurationReceived(object sender, DeviceConfiguration e)
         {
-            if (e.IsValid(out var exception) == false)
+            if (_validate && e.IsValid(out var exception) == false)
             {
                 MessageBox.Show("Invalid message!\n\n" + exception.Message);
             }
@@ -198,6 +222,7 @@ namespace SensorStandardImage
                     };
                 }
                 LogList.Items.Add(item);
+                ScrollViewer.ScrollToEnd();
             });
         }
 
@@ -232,16 +257,6 @@ namespace SensorStandardImage
             return imgSrc;
         }
 
-        private void KeepAliveCheckBox_OnChecked(object sender, RoutedEventArgs e)
-        {
-            _showKeepAlive = true;
-        }
-
-        private void KeepAliveCheckBox_OnUnchecked(object sender, RoutedEventArgs e)
-        {
-            _showKeepAlive = false;
-        }
-
         private async void JoinUiThread(Action action)
         {
             await Dispatcher.InvokeAsync(action);
@@ -251,6 +266,30 @@ namespace SensorStandardImage
         {
             _device?.Disconnect();
             Environment.Exit(0);
+        }
+
+        private void ValidateCheckBox_OnChecked(object sender, RoutedEventArgs e)
+        {
+            // cant use binding because of thread issue
+            _validate = true;
+        }
+
+        private void ValidateCheckBox_OnUnchecked(object sender, RoutedEventArgs e)
+        {
+            // cant use binding because of thread issue
+            _validate = false;
+        }
+
+        private void KeepAliveCheckBox_OnChecked(object sender, RoutedEventArgs e)
+        {
+            // cant use binding because of thread issue
+            _showKeepAlive = true;
+        }
+
+        private void KeepAliveCheckBox_OnUnchecked(object sender, RoutedEventArgs e)
+        {
+            // cant use binding because of thread issue
+            _showKeepAlive = false;
         }
     }
 }
