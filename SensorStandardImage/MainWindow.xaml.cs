@@ -75,118 +75,98 @@ namespace SensorStandardImage
                 GetLocalIPAddress(), NotificationPort, "MarsLab");
 
             Globals.ValidateMessages = false;
-            _device.CommandMessageSent += Device_CommandMessageSent;
-            _device.ConfigurationReceived += Device_ConfigurationReceived;
-            _device.ConfigurationRequestSent += Device_ConfigurationRequestSent;
+
+            _device.MessageSent += Device_MessageSent;
+            _device.MessageReceived += Device_MessageReceived;
             _device.Disconnected += Device_Disconnected;
-            _device.IndicationReportReceived += Device_IndicationReportReceived;
-            _device.StatusReportReceived += Device_StatusReportReceived;
-            _device.SubscriptionRequestSent += Device_SubscriptionRequestSent;
 
             _device.Connect();
         }
 
-        private void Device_SubscriptionRequestSent(object sender, DeviceSubscriptionConfiguration e)
-        {
-            AddLogItem("Subscription Request Sent", e.ToXml());
-        }
-
-        private void Device_StatusReportReceived(object sender, DeviceStatusReport e)
+        private void Device_MessageReceived(object sender, MrsMessage e)
         {
             if (_validate && e.IsValid(out var exception) == false)
             {
                 MessageBox.Show("Invalid message!\n\n" + exception.Message);
             }
-            if (_showKeepAlive || e.Items != null && e.Items.OfType<SensorStatusReport>().Any(x=>x.Item != null))
+            if (e is DeviceStatusReport status)
             {
-                AddLogItem("Status Report Received", e.ToXml());
-            }
-
-            var picture = e.Items?.OfType<SensorStatusReport>().FirstOrDefault(x => x.PictureStatus != null)?.PictureStatus;
-            if (picture?.MediaFile != null && picture.MediaFile.Length > 0)
-            {
-                File file = picture.MediaFile[0];
-                var stream = new MemoryStream(file.File1);
-
-                var dir = new DirectoryInfo(@"C:\Program Files (x86)\VideoLAN\VLC");
-                VlcControl.SourceProvider.CreatePlayer(dir);
-                VlcControl.SourceProvider.MediaPlayer.Play(stream);
-                //if (file.ItemElementName == ItemChoiceType3.NameJPEG)
-                //{
-                //    JoinUiThread(() => { VlcControl.SourceProvider.VideoSource = LoadImage(file.File1); });
-                //}
-                //else if (file.ItemElementName == ItemChoiceType3.NameMP4)
-                //{
-                //    var stream = new MemoryStream(file.File1);
-
-                //    var dir = new DirectoryInfo(@"C:\Program Files (x86)\VideoLAN\VLC");
-                //    VlcControl.SourceProvider.CreatePlayer(dir);
-                //    VlcControl.SourceProvider.MediaPlayer.Play(stream); 
-                //}
-            }
-        }
-
-        private void Device_IndicationReportReceived(object sender, DeviceIndicationReport e)
-        {
-            if (_validate && e.IsValid(out var exception) == false)
-            {
-                MessageBox.Show("Invalid message!\n\n" + exception.Message);
-            }
-            AddLogItem("Indication Report Received", e.ToXml());
-
-            if (e.Items.OfType<SensorIndicationReport>().ElementAt(0).IndicationType[0].Item is VideoAnalyticDetectionType detectionType)
-            {
-                var imageData = detectionType.Picture?.ElementAt(0).File1;
-                if (imageData != null)
+                if (_showKeepAlive || status.Items != null && status.Items.OfType<SensorStatusReport>().Any(x => x.Item != null))
                 {
-                    try
-                    {
-                        if (VlcControl.SourceProvider.MediaPlayer == null)
-                        {
-                            var dir = new DirectoryInfo(@"C:\Program Files (x86)\VideoLAN\VLC");
-                            VlcControl.SourceProvider.CreatePlayer(dir);
-                        }
+                    AddLogItem("Status Report Received", e.ToXml());
+                }
+                var picture = status.Items?.OfType<SensorStatusReport>().FirstOrDefault(x => x.PictureStatus != null)?.PictureStatus;
+                if (picture?.MediaFile != null && picture.MediaFile.Length > 0)
+                {
+                    File file = picture.MediaFile[0];
+                    var stream = new MemoryStream(file.File1);
 
-                        var stream = new MemoryStream(imageData);
-                        VlcControl.SourceProvider.MediaPlayer.Play(stream);
-                    }
-                    catch (Exception ex)
+                    var dir = new DirectoryInfo(@"C:\Program Files (x86)\VideoLAN\VLC");
+                    VlcControl.SourceProvider.CreatePlayer(dir);
+                    VlcControl.SourceProvider.MediaPlayer.Play(stream);
+                    //if (file.ItemElementName == ItemChoiceType3.NameJPEG)
+                    //{
+                    //    JoinUiThread(() => { VlcControl.SourceProvider.VideoSource = LoadImage(file.File1); });
+                    //}
+                    //else if (file.ItemElementName == ItemChoiceType3.NameMP4)
+                    //{
+                    //    var stream = new MemoryStream(file.File1);
+
+                    //    var dir = new DirectoryInfo(@"C:\Program Files (x86)\VideoLAN\VLC");
+                    //    VlcControl.SourceProvider.CreatePlayer(dir);
+                    //    VlcControl.SourceProvider.MediaPlayer.Play(stream); 
+                    //}
+                }
+            }
+            else if (e is DeviceIndicationReport indication)
+            {
+                AddLogItem("Indication Report Received", e.ToXml());
+                if (indication.Items.OfType<SensorIndicationReport>().ElementAt(0).IndicationType[0].Item is VideoAnalyticDetectionType detectionType)
+                {
+                    var imageData = detectionType.Picture?.ElementAt(0).File1;
+                    if (imageData != null)
                     {
-                        MessageBox.Show("Error Displaying Media\n\n" + ex);
+                        try
+                        {
+                            if (VlcControl.SourceProvider.MediaPlayer == null)
+                            {
+                                var dir = new DirectoryInfo(@"C:\Program Files (x86)\VideoLAN\VLC");
+                                VlcControl.SourceProvider.CreatePlayer(dir);
+                            }
+
+                            var stream = new MemoryStream(imageData);
+                            VlcControl.SourceProvider.MediaPlayer.Play(stream);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show("Error Displaying Media\n\n" + ex);
+                        }
                     }
                 }
             }
-        }
-
-        private void Device_Disconnected(object sender, EventArgs e)
-        {
-            AddLogItem("Disconnected");
-        }
-
-        private void Device_ConfigurationRequestSent(object sender, DeviceConfiguration e)
-        {
-            AddLogItem("Configuration Request Sent", e.ToXml());
-        }
-
-        private void Device_ConfigurationReceived(object sender, DeviceConfiguration e)
-        {
-            if (_validate && e.IsValid(out var exception) == false)
+            else
             {
-                MessageBox.Show("Invalid message!\n\n" + exception.Message);
+                AddLogItem($"{e.MrsMessageType} Received", e.ToXml());
             }
-            AddLogItem("Configuration Request Received", e.ToXml());
         }
 
-        private void Device_CommandMessageSent(object sender, CommandMessage e)
+        private void Device_MessageSent(object sender, MrsMessage e)
         {
-            if (e.Command.Item is SimpleCommandType simple && simple == SimpleCommandType.KeepAlive)
+            if (e is CommandMessage commandMessage && commandMessage.Command.Item is SimpleCommandType simple &&
+                simple == SimpleCommandType.KeepAlive)
             {
                 if (_showKeepAlive == false)
                 {
                     return;
                 }
             }
-            AddLogItem("Command Message Sent", e.ToXml());
+
+            AddLogItem($"{e.MrsMessageType} Sent", e.ToXml());
+        }
+
+        private void Device_Disconnected(object sender, EventArgs e)
+        {
+            AddLogItem("Disconnected");
         }
 
         private void StopButton_Click(object sender, RoutedEventArgs e)

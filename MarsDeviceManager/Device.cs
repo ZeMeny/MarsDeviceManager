@@ -243,13 +243,13 @@ namespace MarsDeviceManager
 
 			LastDeviceStatus = e;
 
-			StatusReportReceived?.BeginInvoke(this, e, null, null);
+			MessageReceived?.BeginInvoke(this, e, null, null);
 		}
 
 		private void Host_DeviceIndication(object sender, DeviceIndicationReport e)
 		{
 			LastConnectionTime = DateTime.Now;
-			IndicationReportReceived?.BeginInvoke(this, e, null, null);
+			MessageReceived?.BeginInvoke(this, e, null, null);
 		}
 
 		private void Host_CommandMessage(object sender, CommandMessage e)
@@ -271,7 +271,7 @@ namespace MarsDeviceManager
 			};
 			SendSubscriptionRequest(subscriptionTypes);
 
-			ConfigurationReceived?.BeginInvoke(this, e, null, null);
+			MessageReceived?.BeginInvoke(this, e, null, null);
 		}
 
 		private void UpdateSensorStatus(IEnumerable<Sensor> sensors, IEnumerable<SensorStatusReport> statusReports)
@@ -291,12 +291,6 @@ namespace MarsDeviceManager
 		internal void RaiseDisconnected()
 		{
 			Disconnected?.BeginInvoke(this, EventArgs.Empty, null, null);
-		}
-
-		private bool CheckIfFullStatus(DeviceStatusReport statusReport)
-		{
-			return statusReport.Items != null &&
-			       statusReport.Items.OfType<SensorStatusReport>().All(x => x.Item != null);
 		}
 
 		private BasicHttpBinding CreateBindingConfig()
@@ -711,7 +705,7 @@ namespace MarsDeviceManager
 				if (commandMessage.IsValid(out Exception ex))
 				{
 					_client?.BegindoCommandMessage(commandMessage, null, null);
-					CommandMessageSent?.BeginInvoke(this, commandMessage, null, null);
+					MessageSent?.BeginInvoke(this, commandMessage, null, null);
 				}
 				else
 				{
@@ -721,7 +715,7 @@ namespace MarsDeviceManager
 			else
 			{
 				_client?.BegindoCommandMessage(commandMessage, null, null);
-				CommandMessageSent?.BeginInvoke(this, commandMessage, null, null);
+				MessageSent?.BeginInvoke(this, commandMessage, null, null);
 			}
 		}
 
@@ -745,7 +739,7 @@ namespace MarsDeviceManager
 				if (configuration.IsValid(out Exception ex))
 				{
 					_client?.BegindoDeviceConfiguration(configuration, null,null);
-					ConfigurationRequestSent?.BeginInvoke(this, configuration, null, null);
+					MessageSent?.BeginInvoke(this, configuration, null, null);
 				}
 				else
 				{
@@ -755,7 +749,7 @@ namespace MarsDeviceManager
 			else
 			{
 				_client?.BegindoDeviceConfiguration(configuration, null, null);
-				ConfigurationRequestSent?.BeginInvoke(this, configuration, null, null);
+				MessageSent?.BeginInvoke(this, configuration, null, null);
 			}			
 		}
 
@@ -782,7 +776,7 @@ namespace MarsDeviceManager
 				if (deviceSubscription.IsValid(out Exception ex))
 				{
 					_client?.BegindoDeviceSubscriptionConfiguration(deviceSubscription, null, null);
-					SubscriptionRequestSent?.BeginInvoke(this, deviceSubscription, null, null);
+					MessageSent?.BeginInvoke(this, deviceSubscription, null, null);
 				}
 				else
 				{
@@ -792,7 +786,7 @@ namespace MarsDeviceManager
 			else
 			{
 				_client?.BegindoDeviceSubscriptionConfiguration(deviceSubscription, null, null);
-				SubscriptionRequestSent?.BeginInvoke(this, deviceSubscription, null, null);
+				MessageSent?.BeginInvoke(this, deviceSubscription, null, null);
 			}
 		}
 
@@ -830,39 +824,19 @@ namespace MarsDeviceManager
 		#region / / / / /  Events  / / / / /
 
 		/// <summary>
-		/// Occurs When <see cref="DeviceConfiguration"/> is Received from the <see cref="Device"/>
+		/// Occurs When a <see cref="MrsMessage"/> is Received
 		/// </summary>
-		public event EventHandler<DeviceConfiguration> ConfigurationReceived;
+		public event EventHandler<MrsMessage> MessageReceived;
 
 		/// <summary>
-		/// Occurs When <see cref="DeviceStatusReport"/> is Received from the <see cref="Device"/>
+		/// Occurs When a <see cref="MrsMessage"/> is Sent
 		/// </summary>
-		public event EventHandler<DeviceStatusReport> StatusReportReceived;
-
-		/// <summary>
-		/// Occurs When <see cref="DeviceIndicationReport"/> is Received from the <see cref="Device"/>
-		/// </summary>
-		public event EventHandler<DeviceIndicationReport> IndicationReportReceived;
+		public event EventHandler<MrsMessage> MessageSent;
 
 		/// <summary>
 		/// Occurs After a Connection Timeout
 		/// </summary>
 		public event EventHandler Disconnected;
-
-		/// <summary>
-		/// Occurs after a configuration request was sent
-		/// </summary>
-		public event EventHandler<DeviceConfiguration> ConfigurationRequestSent;
-
-		/// <summary>
-		/// Occurs after a subscription request was sent
-		/// </summary>
-		public event EventHandler<DeviceSubscriptionConfiguration> SubscriptionRequestSent;
-
-		/// <summary>
-		/// Occurs after a command message was sent
-		/// </summary>
-		public event EventHandler<CommandMessage> CommandMessageSent;
 
 		#endregion
 	}
