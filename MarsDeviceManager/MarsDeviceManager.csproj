@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="Device.cs" />
     <Compile Include="ConnectionManager.cs" />
+    <Compile Include="DeviceSettings.cs" />
     <Compile Include="DeviceState.cs" />
     <Compile Include="Extensions\ExtensionMethods.cs" />
     <Compile Include="Globals.cs" />

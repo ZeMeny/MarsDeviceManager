@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace MarsDeviceManager
+namespace MrsDeviceManager.Core
 {
 	internal class ConnectionManager
 	{
