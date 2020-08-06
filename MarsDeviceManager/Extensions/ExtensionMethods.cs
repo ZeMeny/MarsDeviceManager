@@ -64,38 +64,39 @@ namespace MarsDeviceManager.Extensions
 				// if the property is an array
 				if (property.PropertyType.IsArray)
 				{
-					var oldList = ((Array)property.GetValue(oldObj)).OfType<object>().ToList();
+					var oldList = ((Array)property.GetValue(oldObj))?.OfType<object>().ToList();
 					var newList = ((Array)property.GetValue(newObj))?.OfType<object>().ToList();
 
-					// if there are any items in the new object's list
-                    if (newList != null)
+					// if there are any items in the object's list
+					if (newList == null || oldList == null)
+					{
+						continue;
+					}
+					// iterate over the new array and update/add values
+					foreach (var newItem in newList)
                     {
-	                    // iterate over the new array and update/add values
-                        foreach (var newItem in newList)
-                        {
-                            // if old array has this value: update old value
-                            try
-                            {
-                                var oldItemIdx
-                                    = oldList.FindIndex(x => IsIdenticalType(x, newItem));
-                                if (oldItemIdx != -1)
-                                {
-                                    // update old item
-                                    oldList[oldItemIdx] = oldList[oldItemIdx].UpdateValues(newItem);
-                                }
-                                else
-                                {
-                                    // add new item to the old array
-                                    oldList.Add(newItem);
-                                }
-                            }
-                            catch (ArgumentNullException)
-                            {
-                                // if just one parameter is null, ignore
-                            }
-                        }
+	                    // if old array has this value: update old value
+	                    try
+	                    {
+		                    var oldItemIdx
+			                    = oldList.FindIndex(x => IsIdenticalType(x, newItem));
+		                    if (oldItemIdx != -1)
+		                    {
+			                    // update old item
+			                    oldList[oldItemIdx] = oldList[oldItemIdx].UpdateValues(newItem);
+		                    }
+		                    else
+		                    {
+			                    // add new item to the old array
+			                    oldList.Add(newItem);
+		                    }
+	                    }
+	                    catch (ArgumentNullException)
+	                    {
+		                    // if just one parameter is null, ignore
+	                    }
                     }
-					// set the updated array to the old object
+                    // set the updated array to the old object
 					//var updatedValue = oldList.Select(x => Convert.ChangeType(x, property.PropertyType.GetElementType()));
 					//var updatedValue = oldList.ConvertAll(x=> x);
 					//TypeConverter converter = TypeDescriptor.GetConverter(property.PropertyType);
