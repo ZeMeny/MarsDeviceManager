@@ -1,15 +1,12 @@
-﻿using MarsDeviceManager.Extensions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.ServiceModel;
-using System.ServiceModel.Description;
-using System.ServiceModel.Security;
-using System.Text;
+using MrsDeviceManager.Core.Extensions;
 using SensorStandard;
 using SensorStandard.MrsTypes;
+using WebSocket4Net;
 
-namespace MarsDeviceManager
+namespace MrsDeviceManager.Core
 {
 	/// <summary>
 	/// Class that represents a mars device
@@ -18,11 +15,9 @@ namespace MarsDeviceManager
 	{
 		#region / / / / /  Private fields  / / / / /
 
-		private SNSR_STDSOAPPortClient _client;
-		private MarsService _service;
-		private readonly ConnectionManager _connectionManager = ConnectionManager.Instance;
-		private ServiceHost _host;
 		private SubscriptionTypeType[] _subscriptions;
+		private readonly ConnectionManager _connectionManager = ConnectionManager.Instance;
+		private WebSocket _socket;
 
 		#endregion
 
@@ -38,16 +33,6 @@ namespace MarsDeviceManager
 		/// Gets the port of the device server
 		/// </summary>
 		public int DevicePort { get; }
-
-		/// <summary>
-		/// Gets the local server IP address
-		/// </summary>
-		public string NotificationIP { get; }
-
-		/// <summary>
-		/// Gets the local server port
-		/// </summary>
-		public int NotificationPort { get; }
 
 		/// <summary>
 		/// Gets the current connection state of the device
@@ -107,12 +92,10 @@ namespace MarsDeviceManager
 		/// <param name="notificationIp">Local Server IP Aderss</param>
 		/// <param name="notificationPort">Local Server Port</param>
 		/// <param name="requestorID">requestor identification</param>
-		public Device(string ip, int port, string notificationIp, int notificationPort, string requestorID)
+		public Device(string ip, int port, string requestorID)
 		{
 			DeviceIP = ip;
 			DevicePort = port;
-			NotificationIP = notificationIp;
-			NotificationPort = notificationPort;
 			RequestorID = requestorID;
 
 			Sensors = new List<Sensor>();
@@ -120,16 +103,7 @@ namespace MarsDeviceManager
 		}
 
 		/// <summary>
-		/// Creates new Instance of the <see cref="Device"/> Class
-		/// </summary>
-		/// <param name="settings">device connection settings</param>
-		public Device(DeviceSettings settings) : this(settings.DeviceIP, settings.DevicePort,
-			settings.DeviceNotificationIP, settings.DeviceNotificationPort, settings.RequestorID)
-		{
-		}
-
-		/// <summary>
-		/// Destroy the device after disconnecting
+		/// Disconnect and destroy the device
 		/// </summary>
 		~Device()
 		{
@@ -180,103 +154,51 @@ namespace MarsDeviceManager
 			return currentCamera;
 		}
 
-		private void InitClient()
-		{
-			string url = $"http://{DeviceIP}:{DevicePort}/SNSR_STD-SOAP";
-
-			_client?.Abort();
-			_client = new SNSR_STDSOAPPortClient(CreateBindingConfig(), new EndpointAddress(url));
-			_client.Open();
-		}
-
-		private void InitHost()
-		{
-			string url = $"http://{NotificationIP}:{NotificationPort}/";
-
-			_service = new MarsService();
-			_service.DeviceConfiguration += Host_DeviceConfiguration;
-			_service.CommandMessage += Host_CommandMessage;
-			_service.DeviceIndication += Host_DeviceIndication;
-			_service.DeviceStatus += Host_DeviceStatus;
-			_service.DeviceSubscription += Host_DeviceSubscription;
-
-			var sensorEndpoint = "SNSR_STD-SOAP";
-			var mexEndpoint = "MEX";
-
-			_host?.Close();
-			_host = new ServiceHost(_service, new Uri(url));
-
-			// add detailed exception reports
-			foreach (var serviceBehavior in _host.Description.Behaviors)
-			{
-				if (serviceBehavior is ServiceBehaviorAttribute serviceBehaviorAttribute)
-				{
-					serviceBehaviorAttribute.IncludeExceptionDetailInFaults = true;
-				}
-			}
-
-			// add behavior for our MEX endpoint
-			var behavior = new ServiceMetadataBehavior
-			{
-				HttpGetEnabled = true
-			};
-			_host.Description.Behaviors.Add(behavior);
-
-			_host.AddServiceEndpoint(typeof(SNSR_STDSOAPPort), CreateBindingConfig(), sensorEndpoint);
-			_host.AddServiceEndpoint(typeof(IMetadataExchange), new BasicHttpBinding(), mexEndpoint);
-
-			_host.Open();
-		}
-
-		private void Host_DeviceSubscription(object sender, DeviceSubscriptionConfiguration e)
+		private void HandleDeviceSubscription(DeviceSubscriptionConfiguration subscriptionConfiguration)
 		{
 			LastConnectionTime = DateTime.Now;
 		}
 
-		private void Host_DeviceStatus(object sender, DeviceStatusReport e)
+		private void HandleDeviceStatus(DeviceStatusReport deviceStatusReport)
 		{
 			LastConnectionTime = DateTime.Now;
-			Sensor temp = GetCurrentCamera(e);
+			Sensor temp = GetCurrentCamera(deviceStatusReport);
 			if (temp != null)
 			{
 				CurrentCamera = temp;
 			}
 
-			if (e.Items != null)
+			if (deviceStatusReport.Items != null)
 			{
-				UpdateSensorStatus(Sensors, e.Items.OfType<SensorStatusReport>());
+				UpdateSensorStatus(Sensors, deviceStatusReport.Items.OfType<SensorStatusReport>());
 			}
 
 			// update the full status report
-			FullDeviceStatus = FullDeviceStatus.UpdateValues(e);
-			//if (CheckIfFullStatus(e))
-			//{
-			//	FullDeviceStatus = e;
-			//}
+			FullDeviceStatus = FullDeviceStatus.UpdateValues(deviceStatusReport);
+			
+			LastDeviceStatus = deviceStatusReport;
 
-			LastDeviceStatus = e;
-
-			MessageReceived?.BeginInvoke(this, e, null, null);
+			MessageReceived?.Invoke(this, deviceStatusReport);
 		}
 
-		private void Host_DeviceIndication(object sender, DeviceIndicationReport e)
+		private void HandleDeviceIndication(DeviceIndicationReport deviceIndicationReport)
 		{
 			LastConnectionTime = DateTime.Now;
-			MessageReceived?.BeginInvoke(this, e, null, null);
+			MessageReceived?.Invoke(this, deviceIndicationReport);
 		}
 
-		private void Host_CommandMessage(object sender, CommandMessage e)
+		private void HandleCommandMessage(CommandMessage commandMessage)
 		{
 			LastConnectionTime = DateTime.Now;
 		}
 
-		private void Host_DeviceConfiguration(object sender, DeviceConfiguration e)
+		private void HandleDeviceConfiguration(DeviceConfiguration deviceConfiguration)
 		{
 			LastConnectionTime = DateTime.Now;
-			Configuration = e;
-			Sensors = InitSensors(e?.SensorConfiguration);
+			Configuration = deviceConfiguration;
+			Sensors = InitSensors(deviceConfiguration?.SensorConfiguration);
 
-			SubscriptionTypeType[] subscriptionTypes = _subscriptions ?? new []
+			SubscriptionTypeType[] subscriptionTypes = _subscriptions ?? new[]
 			{
 				SubscriptionTypeType.Configuration,
 				SubscriptionTypeType.OperationalIndication,
@@ -284,7 +206,7 @@ namespace MarsDeviceManager
 			};
 			SendSubscriptionRequest(subscriptionTypes);
 
-			MessageReceived?.BeginInvoke(this, e, null, null);
+			MessageReceived?.Invoke(this, deviceConfiguration);
 		}
 
 		private void UpdateSensorStatus(IEnumerable<Sensor> sensors, IEnumerable<SensorStatusReport> statusReports)
@@ -303,48 +225,34 @@ namespace MarsDeviceManager
 
 		internal void RaiseDisconnected()
 		{
-			Disconnected?.BeginInvoke(this, EventArgs.Empty, null, null);
+			Disconnected?.Invoke(this, EventArgs.Empty);
 		}
 
 		internal void RaiseConnected()
 		{
-			Connected?.BeginInvoke(this, EventArgs.Empty, null, null);
+			Connected?.Invoke(this, EventArgs.Empty);
 		}
 
-		private BasicHttpBinding CreateBindingConfig()
+		private void Socket_MessageReceived(object sender, MessageReceivedEventArgs e)
 		{
-			return new BasicHttpBinding
+			switch (ExtensionMethods.GetXmlType(e.Message))
 			{
-				CloseTimeout = TimeSpan.FromMinutes(1),
-				OpenTimeout = TimeSpan.FromMinutes(1),
-				SendTimeout = TimeSpan.FromMinutes(1),
-				ReceiveTimeout = TimeSpan.FromMinutes(10),
-				AllowCookies = false,
-				BypassProxyOnLocal = false,
-				HostNameComparisonMode = HostNameComparisonMode.StrongWildcard,
-				MaxBufferSize = 65535 * 1000,
-				MaxBufferPoolSize = 524288 * 1000,
-				MaxReceivedMessageSize = 65535 * 1000,
-				MessageEncoding = WSMessageEncoding.Text,
-				TextEncoding = Encoding.UTF8,
-				TransferMode = TransferMode.Buffered,
-				UseDefaultWebProxy = true,
-				Security = new BasicHttpSecurity
-				{
-					Mode = BasicHttpSecurityMode.None,
-					Transport = new HttpTransportSecurity
-					{
-						ClientCredentialType = HttpClientCredentialType.None,
-						ProxyCredentialType = HttpProxyCredentialType.None,
-						Realm = string.Empty
-					},
-					Message = new BasicHttpMessageSecurity
-					{
-						AlgorithmSuite = SecurityAlgorithmSuite.Default,
-						ClientCredentialType = BasicHttpMessageCredentialType.UserName
-					}
-				},
-			};
+				case MrsMessageTypes.DeviceConfiguration:
+					HandleDeviceConfiguration(ExtensionMethods.XmlConvert<DeviceConfiguration>(e.Message));
+					break;
+				case MrsMessageTypes.DeviceStatusReport:
+					HandleDeviceStatus(ExtensionMethods.XmlConvert<DeviceStatusReport>(e.Message));
+					break;
+				case MrsMessageTypes.DeviceSubscriptionConfiguration:
+					HandleDeviceSubscription(ExtensionMethods.XmlConvert<DeviceSubscriptionConfiguration>(e.Message));
+					break;
+				case MrsMessageTypes.DeviceIndicationReport:
+					HandleDeviceIndication(ExtensionMethods.XmlConvert<DeviceIndicationReport>(e.Message));
+					break;
+				case MrsMessageTypes.CommandMessage:
+					HandleCommandMessage(ExtensionMethods.XmlConvert<CommandMessage>(e.Message));
+					break;
+			}
 		}
 
 		#endregion
@@ -357,39 +265,26 @@ namespace MarsDeviceManager
 		/// </summary>
 		public void Connect(SubscriptionTypeType[] subscriptions = null)
 		{
-			InitClient();
-			InitHost();
-
-			_subscriptions = subscriptions;
+			_socket = new WebSocket($"ws://{DeviceIP}:{DevicePort}");
+            _socket.MessageReceived += Socket_MessageReceived;
+            _subscriptions = subscriptions;
 
 			_connectionManager.AddDevice(this);
 		}
 
-		/// <summary>
-		/// Stop connection
-		/// </summary>
-		public void Disconnect()
+        /// <summary>
+        /// Stop connection
+        /// </summary>
+        public void Disconnect()
 		{
 			_connectionManager.RemoveDevice(this);
-			try
+			if (State == DeviceState.Connected)
 			{
-				if (State == DeviceState.Connected)
-				{
-					SendSubscriptionRequest(new SubscriptionTypeType[0]);
-				}
-				_host?.Close();
-				_host?.Abort();
-				_host = null;
-				_client?.Close();
-				_client?.Abort();
-				_client = null;
-				State = DeviceState.Disconnected;
-				Disconnected?.BeginInvoke(this, EventArgs.Empty, null, null);
+				SendSubscriptionRequest(new SubscriptionTypeType[0]);
 			}
-			catch
-			{
-				// ignore
-			}
+
+			State = DeviceState.Disconnected;
+			Disconnected?.Invoke(this, EventArgs.Empty);
 		}
 
 		/// <summary>
@@ -496,7 +391,7 @@ namespace MarsDeviceManager
 										Units = AngularUnitsType.Mils,
 										Value = Math.Round(UnitConverter.DegreeToMils(elevation), 2)
 									},
-									Range = Math.Abs(range) > 0 ? new Distance
+									Range = range > 0 ? new Distance
 									{
 										Units = DistanceUnitsType.Meters,
 										Value = range
@@ -722,18 +617,18 @@ namespace MarsDeviceManager
 			{
 				if (commandMessage.IsValid(out Exception ex))
 				{
-					_client?.BegindoCommandMessage(commandMessage, null, null);
-					MessageSent?.BeginInvoke(this, commandMessage, null, null);
+					_socket?.Send(commandMessage.ToXml());
+					MessageSent?.Invoke(this, commandMessage);
 				}
 				else
 				{
 					throw ex;
-				} 
+				}
 			}
 			else
 			{
-				_client?.BegindoCommandMessage(commandMessage, null, null);
-				MessageSent?.BeginInvoke(this, commandMessage, null, null);
+				_socket?.Send(commandMessage.ToXml());
+				MessageSent?.Invoke(this, commandMessage);
 			}
 		}
 
@@ -746,8 +641,6 @@ namespace MarsDeviceManager
 			{
 				MessageTypeSpecified = true,
 				MessageType = MessageType.Request,
-				NotificationServiceIPAddress = NotificationIP,
-				NotificationServicePort = NotificationPort.ToString(),
 				RequestorIdentification = RequestorID
 			};
 			Console.WriteLine($"Sending Device configuration to {DeviceIP}:{DevicePort}");
@@ -756,8 +649,12 @@ namespace MarsDeviceManager
 			{
 				if (configuration.IsValid(out Exception ex))
 				{
-					_client?.BegindoDeviceConfiguration(configuration, null,null);
-					MessageSent?.BeginInvoke(this, configuration, null, null);
+					if (_socket.State != WebSocketState.Open && _socket.State != WebSocketState.Connecting)
+					{
+						_socket.Open();
+					}
+					_socket.Send(configuration.ToXml());
+					MessageSent?.Invoke(this, configuration);
 				}
 				else
 				{
@@ -766,9 +663,13 @@ namespace MarsDeviceManager
 			}
 			else
 			{
-				_client?.BegindoDeviceConfiguration(configuration, null, null);
-				MessageSent?.BeginInvoke(this, configuration, null, null);
-			}			
+				if (_socket.State != WebSocketState.Open && _socket.State != WebSocketState.Connecting)
+				{
+					_socket.Open();
+				}
+				_socket.Send(configuration.ToXml());
+				MessageSent?.Invoke(this, configuration);
+			}
 		}
 
 		/// <summary>
@@ -793,18 +694,18 @@ namespace MarsDeviceManager
 			{
 				if (deviceSubscription.IsValid(out Exception ex))
 				{
-					_client?.BegindoDeviceSubscriptionConfiguration(deviceSubscription, null, null);
-					MessageSent?.BeginInvoke(this, deviceSubscription, null, null);
+					_socket?.Send(deviceSubscription.ToXml());
+					MessageSent?.Invoke(this, deviceSubscription);
 				}
 				else
 				{
 					throw ex;
-				} 
+				}
 			}
 			else
 			{
-				_client?.BegindoDeviceSubscriptionConfiguration(deviceSubscription, null, null);
-				MessageSent?.BeginInvoke(this, deviceSubscription, null, null);
+				_socket?.Send(deviceSubscription.ToXml());
+				MessageSent?.Invoke(this, deviceSubscription);
 			}
 		}
 
@@ -818,10 +719,7 @@ namespace MarsDeviceManager
 			Device device = (Device)obj;
 			if (device != null)
 			{
-				return device.DeviceIP == DeviceIP
-					&& device.DevicePort == DevicePort
-					&& device.NotificationIP == NotificationIP
-					&& device.NotificationPort == NotificationPort;
+				return device.DeviceIP == DeviceIP && device.DevicePort == DevicePort;
 			}
 			return false;
 		}
@@ -857,7 +755,7 @@ namespace MarsDeviceManager
 		public event EventHandler Disconnected;
 
 		/// <summary>
-		/// Occurs After a new connection is established
+		/// Occurs When a new Connection is Established
 		/// </summary>
 		public event EventHandler Connected;
 

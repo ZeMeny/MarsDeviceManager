@@ -1,0 +1,21 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="TestClient.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="DeviceIP" Type="System.String" Scope="User">
+      <Value Profile="(Default)">127.0.0.1</Value>
+    </Setting>
+    <Setting Name="DevicePort" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">13001</Value>
+    </Setting>
+    <Setting Name="CallbackIP" Type="System.String" Scope="User">
+      <Value Profile="(Default)">127.0.0.1</Value>
+    </Setting>
+    <Setting Name="CallbackPort" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">11011</Value>
+    </Setting>
+    <Setting Name="RequestorID" Type="System.String" Scope="User">
+      <Value Profile="(Default)">MarsLab</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

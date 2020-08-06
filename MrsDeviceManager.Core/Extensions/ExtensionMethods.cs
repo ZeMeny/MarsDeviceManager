@@ -1,19 +1,15 @@
-﻿using MarsDeviceManager.Properties;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Xml;
-using System.Xml.Schema;
+using System.Xml.Linq;
 using System.Xml.Serialization;
+using SensorStandard;
 
-namespace MarsDeviceManager.Extensions
+namespace MrsDeviceManager.Core.Extensions
 {
 	/// <summary>
-	/// Contains extension methods used in the <see cref="MarsDeviceManager"/> library
+	/// Contains extension methods used in the <see cref="MrsDeviceManager"/> library
 	/// </summary>
 	public static class ExtensionMethods
 	{
@@ -57,45 +53,46 @@ namespace MarsDeviceManager.Extensions
 				return newObj;
 			}
 
-			// iterate over the old object properties
+			// iterate over the object properties
 			foreach (PropertyInfo property in oldType.GetProperties().Where(x=>x.CanWrite))
 			{
 				#region Array handeling
 				// if the property is an array
 				if (property.PropertyType.IsArray)
 				{
-					var oldList = ((Array)property.GetValue(oldObj)).OfType<object>().ToList();
+					var oldList = ((Array)property.GetValue(oldObj))?.OfType<object>().ToList();
 					var newList = ((Array)property.GetValue(newObj))?.OfType<object>().ToList();
 
-					// if there are any items in the new object's list
-                    if (newList != null)
+                    if (newList == null || oldList == null)
                     {
-	                    // iterate over the new array and update/add values
-                        foreach (var newItem in newList)
-                        {
-                            // if old array has this value: update old value
-                            try
-                            {
-                                var oldItemIdx
-                                    = oldList.FindIndex(x => IsIdenticalType(x, newItem));
-                                if (oldItemIdx != -1)
-                                {
-                                    // update old item
-                                    oldList[oldItemIdx] = oldList[oldItemIdx].UpdateValues(newItem);
-                                }
-                                else
-                                {
-                                    // add new item to the old array
-                                    oldList.Add(newItem);
-                                }
-                            }
-                            catch (ArgumentNullException)
-                            {
-                                // if just one parameter is null, ignore
-                            }
-                        }
+	                    continue;
                     }
-					// set the updated array to the old object
+                    // iterate over the new array and update/add values
+                    foreach (var newItem in newList)
+                    {
+	                    // if old array has this value: update old value
+	                    try
+	                    {
+		                    var oldItemIdx
+			                    = oldList.FindIndex(x => IsIdenticalType(x, newItem));
+		                    if (oldItemIdx != -1)
+		                    {
+			                    // update old item
+			                    oldList[oldItemIdx] = oldList[oldItemIdx].UpdateValues(newItem);
+		                    }
+		                    else
+		                    {
+			                    // add new item to the old array
+			                    oldList.Add(newItem);
+		                    }
+	                    }
+	                    catch (ArgumentNullException)
+	                    {
+		                    // if just one parameter is null, ignore
+	                    }
+                    }
+
+                    // set the updated array to the old object
 					//var updatedValue = oldList.Select(x => Convert.ChangeType(x, property.PropertyType.GetElementType()));
 					//var updatedValue = oldList.ConvertAll(x=> x);
 					//TypeConverter converter = TypeDescriptor.GetConverter(property.PropertyType);
@@ -188,6 +185,25 @@ namespace MarsDeviceManager.Extensions
 			}
 
 			return result;
+		}
+
+		public static MrsMessageTypes? GetXmlType(string xml)
+		{
+			XDocument doc = XDocument.Parse(xml);
+			string rootName = doc.Root?.Name.LocalName;
+			if (Enum.TryParse(typeof(MrsMessageTypes), rootName, out var type))
+			{
+				return (MrsMessageTypes?) type;
+			}
+
+			return null;
+		}
+
+		public static T XmlConvert<T>(string xml)
+		{
+			XmlSerializer serializer = new XmlSerializer(typeof(T));
+			StringReader reader = new StringReader(xml);
+			return (T)serializer.Deserialize(reader);
 		}
 	}
 }
