@@ -241,7 +241,11 @@ namespace MarsDeviceManager
 			{
 				CurrentCamera = temp;
 			}
-			UpdateSensorStatus(Sensors, e.Items.OfType<SensorStatusReport>());
+
+			if (e.Items != null)
+			{
+				UpdateSensorStatus(Sensors, e.Items.OfType<SensorStatusReport>());
+			}
 
 			// update the full status report
 			FullDeviceStatus = FullDeviceStatus.UpdateValues(e);

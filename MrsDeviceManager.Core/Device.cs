@@ -167,7 +167,11 @@ namespace MrsDeviceManager.Core
 			{
 				CurrentCamera = temp;
 			}
-			UpdateSensorStatus(Sensors, deviceStatusReport.Items.OfType<SensorStatusReport>());
+
+			if (deviceStatusReport.Items != null)
+			{
+				UpdateSensorStatus(Sensors, deviceStatusReport.Items.OfType<SensorStatusReport>());
+			}
 
 			// update the full status report
 			FullDeviceStatus = FullDeviceStatus.UpdateValues(deviceStatusReport);

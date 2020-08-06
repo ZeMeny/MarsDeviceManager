@@ -57,7 +57,7 @@ namespace MarsDeviceManager.Extensions
 				return newObj;
 			}
 
-			// iterate over the object properties
+			// iterate over the old object properties
 			foreach (PropertyInfo property in oldType.GetProperties().Where(x=>x.CanWrite))
 			{
 				#region Array handeling
@@ -65,33 +65,36 @@ namespace MarsDeviceManager.Extensions
 				if (property.PropertyType.IsArray)
 				{
 					var oldList = ((Array)property.GetValue(oldObj)).OfType<object>().ToList();
-					var newList = ((Array)property.GetValue(newObj)).OfType<object>().ToList();
+					var newList = ((Array)property.GetValue(newObj))?.OfType<object>().ToList();
 
-					// iterate over the new array and update/add values
-					foreach (var newItem in newList)
-					{
-						// if old array has this value: update old value
-						try
-						{
-							var oldItemIdx
-								= oldList.FindIndex(x => IsIdenticalType(x, newItem));
-							if (oldItemIdx != -1)
-							{
-								// update old item
-								oldList[oldItemIdx] = oldList[oldItemIdx].UpdateValues(newItem);
-							}
-							else
-							{
-								// add new item to the old array
-								oldList.Add(newItem);
-							}
-						}
-						catch (ArgumentNullException)
-						{
-							// if just one parameter is null, ignore
-						}
-					}
-
+					// if there are any items in the new object's list
+                    if (newList != null)
+                    {
+	                    // iterate over the new array and update/add values
+                        foreach (var newItem in newList)
+                        {
+                            // if old array has this value: update old value
+                            try
+                            {
+                                var oldItemIdx
+                                    = oldList.FindIndex(x => IsIdenticalType(x, newItem));
+                                if (oldItemIdx != -1)
+                                {
+                                    // update old item
+                                    oldList[oldItemIdx] = oldList[oldItemIdx].UpdateValues(newItem);
+                                }
+                                else
+                                {
+                                    // add new item to the old array
+                                    oldList.Add(newItem);
+                                }
+                            }
+                            catch (ArgumentNullException)
+                            {
+                                // if just one parameter is null, ignore
+                            }
+                        }
+                    }
 					// set the updated array to the old object
 					//var updatedValue = oldList.Select(x => Convert.ChangeType(x, property.PropertyType.GetElementType()));
 					//var updatedValue = oldList.ConvertAll(x=> x);
