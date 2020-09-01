@@ -376,6 +376,8 @@ namespace MarsDeviceManager
 				if (State == DeviceState.Connected)
 				{
 					SendSubscriptionRequest(new SubscriptionTypeType[0]);
+					State = DeviceState.Disconnected;
+					Disconnected?.BeginInvoke(this, EventArgs.Empty, null, null);
 				}
 				_host?.Close();
 				_host?.Abort();
@@ -383,8 +385,6 @@ namespace MarsDeviceManager
 				_client?.Close();
 				_client?.Abort();
 				_client = null;
-				State = DeviceState.Disconnected;
-				Disconnected?.BeginInvoke(this, EventArgs.Empty, null, null);
 			}
 			catch
 			{
@@ -716,8 +716,6 @@ namespace MarsDeviceManager
 				Command = commandType,
 				SensorIdentification = sensor?.SensorIdentification,
 			};
-			Console.WriteLine($"Sending Command Message ({commandType.Item}) to {DeviceIP}:{DevicePort}");
-
 			if (Globals.ValidateMessages)
 			{
 				if (commandMessage.IsValid(out Exception ex))
@@ -750,8 +748,6 @@ namespace MarsDeviceManager
 				NotificationServicePort = NotificationPort.ToString(),
 				RequestorIdentification = RequestorID
 			};
-			Console.WriteLine($"Sending Device configuration to {DeviceIP}:{DevicePort}");
-
 			if (Globals.ValidateMessages)
 			{
 				if (configuration.IsValid(out Exception ex))
@@ -786,8 +782,6 @@ namespace MarsDeviceManager
 				ExecutionStatusSpecified = false,
 				RequestorIdentification = RequestorID,
 			};
-
-			Console.WriteLine($"Sending Device Subscription to {DeviceIP}:{DevicePort}");
 
 			if (Globals.ValidateMessages)
 			{

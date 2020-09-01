@@ -39,5 +39,11 @@ namespace SensorStandardImage
         {
             Item = item;
         }
+
+        private void This_Closed(object sender, EventArgs e)
+        {
+            ClearValue(ContentProperty);
+            Item = null;
+        }
     }
 }

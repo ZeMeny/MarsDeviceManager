@@ -1,26 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using MarsDeviceManager;
+using SensorStandard;
+using SensorStandard.MrsTypes;
+using System;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using MarsDeviceManager;
-using SensorStandard;
-using SensorStandard.MrsTypes;
-using Vlc.DotNet.Core;
-using Vlc.DotNet.Core.Interops;
+using System.Xml.Serialization;
 using Vlc.DotNet.Wpf;
-using File = SensorStandard.MrsTypes.File;
 
 namespace SensorStandardImage
 {
@@ -98,8 +88,8 @@ namespace SensorStandardImage
                 var picture = status.Items?.OfType<SensorStatusReport>().FirstOrDefault(x => x.PictureStatus != null)?.PictureStatus;
                 if (picture?.MediaFile != null && picture.MediaFile.Length > 0)
                 {
-                    File file = picture.MediaFile[0];
-                    var stream = new MemoryStream(file.File1);
+                    var file = picture.MediaFile[0];
+                    var stream = new MemoryStream(file.File);
 
                     var dir = new DirectoryInfo(@"C:\Program Files (x86)\VideoLAN\VLC");
                     VlcControl.SourceProvider.CreatePlayer(dir);
@@ -120,10 +110,28 @@ namespace SensorStandardImage
             }
             else if (e is DeviceIndicationReport indication)
             {
-                AddLogItem("Indication Report Received", e.ToXml());
+                XmlElementAttribute attr1 = new XmlElementAttribute
+                {
+                    ElementName = "Picture"
+                };
+                XmlElementAttribute attr2 = new XmlElementAttribute
+                {
+                    ElementName = "Video"
+                };
+                XmlAttributes attrs = new XmlAttributes
+                {
+                    XmlIgnore = true
+                };
+                attrs.XmlElements.Add(attr1);
+                attrs.XmlElements.Add(attr2);
+                XmlAttributeOverrides attrOverrides = new XmlAttributeOverrides();
+                attrOverrides.Add(typeof(VideoAnalyticDetectionType), "Picture", attrs);
+                attrOverrides.Add(typeof(VideoAnalyticDetectionType), "Video", attrs);
+
+                AddLogItem("Indication Report Received", e.ToXml(attrOverrides));
                 if (indication.Items.OfType<SensorIndicationReport>().ElementAt(0).IndicationType[0].Item is VideoAnalyticDetectionType detectionType)
                 {
-                    var imageData = detectionType.Picture?.ElementAt(0).File1;
+                    var imageData = detectionType.Picture?.ElementAt(0).File;
                     if (imageData != null)
                     {
                         try

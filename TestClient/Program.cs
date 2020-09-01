@@ -20,34 +20,27 @@ namespace TestClient
 			Globals.ValidateMessages = false;
 			Device device = new Device(ip, port, callbackIp, callbackPort, requestorId);
 			device.MessageReceived += Device_MessageReceived;
-
-			var device2 = new Device(ip, port + 1, callbackIp, callbackPort + 1, requestorId);
-			device2.MessageReceived += Device_MessageReceived;
+            device.MessageSent += Device_MessageSent;
 
 			Console.WriteLine("Connecting...");
 			Console.WriteLine("Press any key to exit");
 			device.Connect();
-			device2.Connect();
 
 			Console.ReadKey(true);
 
 			device.Disconnect();
-			device2.Disconnect();
+		}
+
+        private static void Device_MessageSent(object sender, MrsMessage e)
+		{
+			Device device = (Device)sender;
+			Console.WriteLine($"{DateTime.Now} - {e.MrsMessageType} Message Sent to {device.DeviceIP}:{device.DevicePort}");
 		}
 
         private static void Device_MessageReceived(object sender, MrsMessage e)
         {
 			Device device = (Device)sender;
-			if (e.IsValid(out Exception exception))
-			{
-				Console.WriteLine($"{e.MrsMessageType} received from {device.DeviceIP}:{device.DevicePort}");
-			}
-			else
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine($"Invalid message received from {device.DeviceIP}:{device.DevicePort}!\n{exception}");
-				Console.ResetColor();
-			}
+			Console.WriteLine($"{DateTime.Now} - {e.MrsMessageType} Message Received from {device.DeviceIP}:{device.DevicePort}");			
 		}
 	}
 }

@@ -10,7 +10,8 @@
         TextElement.Foreground="{StaticResource MaterialDesignBody}"
         DataContext="{Binding ElementName=This}"
         Title="Log Item Window" Height="450" Width="400"
-        MinHeight="450" MinWidth="400">
+        MinHeight="450" MinWidth="400"
+        Closed="This_Closed">
     <ScrollViewer HorizontalScrollBarVisibility="Auto">
         <TextBox IsReadOnly="True" Text="{Binding Item}"/>
     </ScrollViewer>

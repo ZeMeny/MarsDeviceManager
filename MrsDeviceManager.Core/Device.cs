@@ -281,10 +281,9 @@ namespace MrsDeviceManager.Core
 			if (State == DeviceState.Connected)
 			{
 				SendSubscriptionRequest(new SubscriptionTypeType[0]);
+				State = DeviceState.Disconnected;
+				Disconnected?.Invoke(this, EventArgs.Empty);
 			}
-
-			State = DeviceState.Disconnected;
-			Disconnected?.Invoke(this, EventArgs.Empty);
 		}
 
 		/// <summary>
