@@ -12,7 +12,7 @@ using SensorStandard.MrsTypes;
 namespace MarsDeviceManager
 {
 	/// <summary>
-	/// Class that represents a mars device
+	/// A Class that Represents a Mars Device
 	/// </summary>
 	public class Device
 	{
@@ -230,11 +230,22 @@ namespace MarsDeviceManager
 
 		private void Host_DeviceSubscription(object sender, DeviceSubscriptionConfiguration e)
 		{
+			if (Globals.ValidateMessages && !e.IsValid(out var ex))
+			{
+				throw ex;
+			}
+
 			LastConnectionTime = DateTime.Now;
+			MessageReceived?.BeginInvoke(this, e, null, null);
 		}
 
 		private void Host_DeviceStatus(object sender, DeviceStatusReport e)
 		{
+			if (Globals.ValidateMessages && !e.IsValid(out var ex))
+			{
+				throw ex;
+			}
+
 			LastConnectionTime = DateTime.Now;
 			Sensor temp = GetCurrentCamera(e);
 			if (temp != null)
@@ -244,15 +255,11 @@ namespace MarsDeviceManager
 
 			if (e.Items != null)
 			{
-				UpdateSensorStatus(Sensors, e.Items.OfType<SensorStatusReport>());
+				UpdateSensorData(e);
 			}
 
 			// update the full status report
 			FullDeviceStatus = FullDeviceStatus.UpdateValues(e);
-			//if (CheckIfFullStatus(e))
-			//{
-			//	FullDeviceStatus = e;
-			//}
 
 			LastDeviceStatus = e;
 
@@ -261,20 +268,38 @@ namespace MarsDeviceManager
 
 		private void Host_DeviceIndication(object sender, DeviceIndicationReport e)
 		{
+			if (Globals.ValidateMessages && !e.IsValid(out var ex))
+			{
+				throw ex;
+			}
+
 			LastConnectionTime = DateTime.Now;
 			MessageReceived?.BeginInvoke(this, e, null, null);
 		}
 
 		private void Host_CommandMessage(object sender, CommandMessage e)
 		{
+			if (Globals.ValidateMessages && !e.IsValid(out var ex))
+			{
+				throw ex;
+			}
+
 			LastConnectionTime = DateTime.Now;
+			MessageReceived?.BeginInvoke(this, e, null, null);
 		}
 
 		private void Host_DeviceConfiguration(object sender, DeviceConfiguration e)
 		{
+			if (Globals.ValidateMessages && !e.IsValid(out var ex))
+			{
+				throw ex;
+			}
+
 			LastConnectionTime = DateTime.Now;
 			Configuration = e;
 			Sensors = InitSensors(e?.SensorConfiguration);
+
+			MessageReceived?.BeginInvoke(this, e, null, null);
 
 			SubscriptionTypeType[] subscriptionTypes = _subscriptions ?? new []
 			{
@@ -283,20 +308,33 @@ namespace MarsDeviceManager
 				SubscriptionTypeType.TechnicalStatus
 			};
 			SendSubscriptionRequest(subscriptionTypes);
-
-			MessageReceived?.BeginInvoke(this, e, null, null);
 		}
 
-		private void UpdateSensorStatus(IEnumerable<Sensor> sensors, IEnumerable<SensorStatusReport> statusReports)
+		private void UpdateSensorData(DeviceStatusReport statusReport)
 		{
-			foreach (Sensor sensor in sensors)
+			foreach (var deviceStatus in statusReport.Items.OfType<DeviceStatusReport>())
+			{
+				UpdateSensorData(deviceStatus);
+			}
+
+			var sensorStatus = statusReport.Items.OfType<SensorStatusReport>();
+			var sensorBit = statusReport.Items.OfType<DetailedSensorBITType>();
+			foreach (var sensor in Sensors)
 			{
 				// find sensor status
 				// ReSharper disable once PossibleMultipleEnumeration
-				SensorStatusReport statusReport = statusReports.FirstOrDefault(x => x.SensorIdentification.Equals(sensor.SensorIdentification));
-				if (statusReport?.Item != null)
+				var matchingSensorStatus =
+					sensorStatus.FirstOrDefault(x => x.SensorIdentification.Equals(sensor.SensorIdentification));
+				if (matchingSensorStatus?.Item != null)
 				{
-					sensor.SensorStatus = statusReport;
+					sensor.SensorStatus = matchingSensorStatus;
+				}
+
+				// ReSharper disable once PossibleMultipleEnumeration
+				var matchingSensorBit = sensorBit.FirstOrDefault(x => x.SensorIdentification.Equals(sensor.SensorIdentification));
+				if (matchingSensorBit != null)
+				{
+					sensor.SensorBit = matchingSensorBit;
 				}
 			}
 		}
@@ -373,9 +411,9 @@ namespace MarsDeviceManager
 			_connectionManager.RemoveDevice(this);
 			try
 			{
+				SendSubscriptionRequest(new SubscriptionTypeType[0]);
 				if (State == DeviceState.Connected)
 				{
-					SendSubscriptionRequest(new SubscriptionTypeType[0]);
 					State = DeviceState.Disconnected;
 					Disconnected?.BeginInvoke(this, EventArgs.Empty, null, null);
 				}
@@ -558,21 +596,19 @@ namespace MarsDeviceManager
 		/// <summary>
 		/// Send Zoom command
 		/// </summary>
-		/// <param name="value">Zoom value</param>
+		/// <param name="operation">Zoom Operation, true for Plus otherwise, false</param>
 		/// <param name="sensor">Target Sensor (default is the active camera)</param>
-		public void Zoom(double value, Sensor sensor = null)
+		public void Zoom(bool operation, Sensor sensor = null)
 		{
 			CommandType command = new CommandType
 			{
 				Item = new OpticalCommandType
 				{
 					SimpleCommand = SimpleCommandType.Zoom,
-					ItemElementName = ItemChoiceType1.Value,
 					OperationSpecified = true,
-					Operation = value > 0 ? OperationType.Plus : OperationType.Minus,
+					Operation = operation ? OperationType.Plus : OperationType.Minus,
 					ControlSpecified = true,
-					Control = ControlType.Manual,
-					Item = value
+					Control = ControlType.Manual
 				}
 			};
 			SendCommandMessage(command, sensor ?? CurrentCamera);
@@ -590,11 +626,11 @@ namespace MarsDeviceManager
 				Item = new OpticalCommandType
 				{
 					SimpleCommand = SimpleCommandType.Focus,
-					ItemElementName = ItemChoiceType1.Value,
 					OperationSpecified = true,
 					Operation = value > 0 ? OperationType.Plus : OperationType.Minus,
 					ControlSpecified = true,
 					Control = ControlType.Manual,
+					ItemElementName = ItemChoiceType1.Value,
 					Item = value
 				}
 			};
@@ -631,7 +667,7 @@ namespace MarsDeviceManager
 			{
 				command.Item = SimpleCommandType.Stop;
 			}
-			else if (sensor.Configuration.SimpleCommandConfiguration.Contains(SimpleCommandType.Stop))
+			else if (sensor.Configuration.SimpleCommandConfiguration != null && sensor.Configuration.SimpleCommandConfiguration.Contains(SimpleCommandType.Stop))
 			{
 				// if sensor is EO sensor
 				if (cameraTypes.Contains(sensor.Configuration.SensorIdentification.SensorType))

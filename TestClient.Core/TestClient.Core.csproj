@@ -2,17 +2,15 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MrsDeviceManager.Core\MrsDeviceManager.Core.csproj" />
+    <PackageReference Include="SensorStandard.Core" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="SensorStandard">
-      <HintPath>..\..\SensorStandard\SensorStandard\bin\Debug\SensorStandard.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\MrsDeviceManager.Core\MrsDeviceManager.Core.csproj" />
   </ItemGroup>
 
 </Project>

@@ -46,12 +46,11 @@ namespace MarsDeviceManager.Extensions
 			if (newType != oldType)
 			{
 				// do nothing
-				Console.WriteLine("Runtime types are not the same, operation cancelled");
 				return oldObj;
 			}
 
-			// if it is a primitive value
-			if (oldType.IsPrimitive || oldType == typeof(string) || oldType.IsEnum)
+			// if it is a primitive value or a struct (like DateTime)
+			if (oldType.IsPrimitive || oldType == typeof(string) || oldType.IsEnum || oldType.IsValueType)
 			{
 				// simply insert the new value
 				return newObj;
@@ -60,7 +59,6 @@ namespace MarsDeviceManager.Extensions
 			// iterate over the old object properties
 			foreach (PropertyInfo property in oldType.GetProperties().Where(x=>x.CanWrite))
 			{
-				#region Array handeling
 				// if the property is an array
 				if (property.PropertyType.IsArray)
 				{
@@ -96,12 +94,6 @@ namespace MarsDeviceManager.Extensions
 		                    // if just one parameter is null, ignore
 	                    }
                     }
-                    // set the updated array to the old object
-					//var updatedValue = oldList.Select(x => Convert.ChangeType(x, property.PropertyType.GetElementType()));
-					//var updatedValue = oldList.ConvertAll(x=> x);
-					//TypeConverter converter = TypeDescriptor.GetConverter(property.PropertyType);
-					//var updatedValue = converter.ConvertFrom(oldList);
-					//property.SetValue(oldObj, updatedValue);
 				}
 				else
 				{
@@ -122,23 +114,6 @@ namespace MarsDeviceManager.Extensions
 					UpdateValues(oldValue, newValue);
 					property.SetValue(oldObj, oldValue);
 				}
-				#endregion
-
-				// take new value
-				//object newValue = property.GetValue(newObj);
-
-				//// ignore null values
-				//if (newValue == null)
-				//{
-				//	continue;
-				//}
-
-				//// take old value
-				//object oldValue = property.GetValue(oldObj);
-
-				//// update the old value with the new value
-				//// (over and over until it is a primitive value)
-				//property.SetValue(oldObj, UpdateValues(oldValue, newValue));
 			}
 
 			// after all the values are updated, return the (updated) old object
@@ -152,16 +127,16 @@ namespace MarsDeviceManager.Extensions
 			{
 				return true;
 			}
-			else if (a == null || b == null)
+			if (a == null || b == null)
 			{
-				throw new ArgumentNullException($"{a ?? b}", "one of the parameters was null");
+				return false;
 			}
 
 			Type aType = a.GetType();
 			Type bType = b.GetType();
 
 			bool result = true;
-			if (aType.IsPrimitive || aType == typeof(string) || aType.IsEnum || !aType.IsValueType)
+			if (aType.IsPrimitive || aType == typeof(string) || aType.IsEnum || aType.IsValueType)
 			{
 				// simply return the new value
 				result = aType == bType;

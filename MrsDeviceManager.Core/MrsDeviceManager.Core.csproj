@@ -1,17 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebSocket4Net" Version="0.15.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="SensorStandard">
-      <HintPath>..\..\SensorStandard\SensorStandard\bin\Debug\SensorStandard.dll</HintPath>
-    </Reference>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="SensorStandard.Core" Version="1.0.0" />
+    <PackageReference Include="SoapCore" Version="1.1.0.8" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.8.1" />
   </ItemGroup>
 
 </Project>

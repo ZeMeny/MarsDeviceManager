@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using SensorStandard;
+using SensorStandard.Core;
 
 namespace MrsDeviceManager.Core.Extensions
 {

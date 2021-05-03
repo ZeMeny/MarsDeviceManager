@@ -1,4 +1,4 @@
-﻿using SensorStandard.MrsTypes;
+﻿using SensorStandard.Core.MrsTypes;
 
 namespace MrsDeviceManager.Core
 {
@@ -25,6 +25,11 @@ namespace MrsDeviceManager.Core
         /// Gets the Updated Senosr Status
         /// </summary>
         public SensorStatusReport SensorStatus { get; internal set; }
+
+        /// <summary>
+        /// Gets the Sensor BIT Result
+        /// </summary>
+        public DetailedSensorBITType SensorBit { get; internal set; }
 
         /// <summary>
         /// Gets the Sensors Identification

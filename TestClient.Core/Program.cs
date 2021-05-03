@@ -1,5 +1,5 @@
 ﻿using MrsDeviceManager.Core;
-using SensorStandard;
+using SensorStandard.Core;
 using System;
 
 namespace TestClient.Core
@@ -9,7 +9,7 @@ namespace TestClient.Core
 		static void Main(string[] args)
 		{
 			Globals.ValidateMessages = false;
-			Device device = new Device("127.0.0.1", 41000, "MarsLab");
+			Device device = new Device("192.168.43.105", 13001,"127.0.0.1", 11000, "MarsLab");
 			device.MessageReceived += Device_MessageReceived;
             device.MessageSent += Device_MessageSent;
             device.Disconnected += Device_Disconnected;
@@ -19,7 +19,6 @@ namespace TestClient.Core
 
 			while (Console.ReadKey(true).Key != ConsoleKey.Escape)
 			{
-				device.TurnOn();
 			}
 			device.Disconnect();
 		}
