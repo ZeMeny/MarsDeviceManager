@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "TestClient.Core": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

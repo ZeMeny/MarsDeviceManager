@@ -3,10 +3,10 @@
   <Profiles />
   <Settings>
     <Setting Name="DeviceIP" Type="System.String" Scope="User">
-      <Value Profile="(Default)">127.0.0.1</Value>
+      <Value Profile="(Default)">192.168.43.105</Value>
     </Setting>
     <Setting Name="DevicePort" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">13001</Value>
+      <Value Profile="(Default)">41000</Value>
     </Setting>
     <Setting Name="CallbackIP" Type="System.String" Scope="User">
       <Value Profile="(Default)">127.0.0.1</Value>

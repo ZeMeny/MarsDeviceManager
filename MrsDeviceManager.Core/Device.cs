@@ -24,8 +24,7 @@ namespace MrsDeviceManager.Core
 		private SubscriptionTypeType[] _subscriptions;
 		private readonly ConnectionManager _connectionManager = ConnectionManager.Instance;
 		private IHost _host;
-		private ChannelFactory<SNSR_STDSOAPPort> _client;
-		private SNSR_STDSOAPPort _channel;
+		private SNSR_STDSOAPPortClient _client;
 
 		#endregion
 
@@ -148,8 +147,7 @@ namespace MrsDeviceManager.Core
 		{
 			var binding = CreateBindingConfig();
 			var endpoint = new EndpointAddress($"http://{DeviceIP}:{DevicePort}/SNSR_STD-SOAP");
-			_client = new ChannelFactory<SNSR_STDSOAPPort>(binding, endpoint);
-			_channel = _client.CreateChannel(endpoint);
+			_client = new SNSR_STDSOAPPortClient(binding, endpoint);
 		}
 
 		private void InitHost()
@@ -729,7 +727,7 @@ namespace MrsDeviceManager.Core
 			{
 				if (commandMessage.IsValid(out Exception ex))
 				{
-					_channel.doCommandMessage(new doCommandMessageRequest(commandMessage));
+					_client.doCommandMessage(commandMessage);
 					MessageSent?.Invoke(this, commandMessage);
 				}
 				else
@@ -739,7 +737,7 @@ namespace MrsDeviceManager.Core
 			}
 			else
 			{
-				_channel.doCommandMessage(new doCommandMessageRequest(commandMessage));
+				_client.doCommandMessage(commandMessage);
 				MessageSent?.Invoke(this, commandMessage);
 			}
 		}
@@ -763,7 +761,7 @@ namespace MrsDeviceManager.Core
 			{
 				if (configuration.IsValid(out Exception ex))
 				{
-					_channel.doDeviceConfiguration(new doDeviceConfigurationRequest(configuration));
+					_client.BegindoDeviceConfiguration(configuration, null, null);
 					MessageSent?.Invoke(this, configuration);
 				}
 				else
@@ -773,7 +771,7 @@ namespace MrsDeviceManager.Core
 			}
 			else
 			{
-				_channel.doDeviceConfiguration(new doDeviceConfigurationRequest(configuration));
+				_client.BegindoDeviceConfiguration(configuration, null, null);
 				MessageSent?.Invoke(this, configuration);
 			}
 		}
@@ -800,7 +798,7 @@ namespace MrsDeviceManager.Core
 			{
 				if (deviceSubscription.IsValid(out Exception ex))
 				{
-					_channel.doDeviceSubscriptionConfiguration(new doDeviceSubscriptionConfigurationRequest(deviceSubscription));
+					_client.BegindoDeviceSubscriptionConfiguration(deviceSubscription, null, null);
 					MessageSent?.Invoke(this, deviceSubscription);
 				}
 				else
@@ -810,7 +808,7 @@ namespace MrsDeviceManager.Core
 			}
 			else
 			{
-				_channel.doDeviceSubscriptionConfiguration(new doDeviceSubscriptionConfigurationRequest(deviceSubscription));
+				_client.BegindoDeviceSubscriptionConfiguration(deviceSubscription, null, null);
 				MessageSent?.Invoke(this, deviceSubscription);
 			}
 		}

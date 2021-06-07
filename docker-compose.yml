@@ -1,0 +1,10 @@
+version: '3.4'
+
+services:
+  testclient.core:
+    image: ${DOCKER_REGISTRY-}testclientcore
+    ports:
+        - "12000:12000"
+    build:
+      context: .
+      dockerfile: TestClient.Core/Dockerfile

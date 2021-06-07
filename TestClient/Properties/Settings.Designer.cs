@@ -25,7 +25,7 @@ namespace TestClient.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("127.0.0.1")]
+        [global::System.Configuration.DefaultSettingValueAttribute("192.168.43.105")]
         public string DeviceIP {
             get {
                 return ((string)(this["DeviceIP"]));
@@ -37,7 +37,7 @@ namespace TestClient.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("13001")]
+        [global::System.Configuration.DefaultSettingValueAttribute("41000")]
         public int DevicePort {
             get {
                 return ((int)(this["DevicePort"]));
